@@ -58,12 +58,16 @@ func main() {
 	customerService := services.NewCustomerService(db, logger)
 	messageService := services.NewMessageService(db, logger)
 
+	sseHub := controllers.NewSSEHub(logger)
+
 	webhookCtrl := controllers.NewWebhookController(
-		&cfg.WhatsApp, whatsAppService, customerService, messageService, queueClient, logger,
+		&cfg.WhatsApp, whatsAppService, customerService, messageService, queueClient, sseHub, logger,
 	)
 	messageCtrl := controllers.NewMessageController(
 		cfg, whatsAppService, customerService, messageService, queueClient, logger,
 	)
+	customerCtrl := controllers.NewCustomerController(db, logger)
+	sseCtrl := controllers.NewSSEController(sseHub)
 	healthCtrl := controllers.NewHealthController(db, queueClient, logger)
 
 	router := gin.New()
@@ -71,9 +75,11 @@ func main() {
 	router.Use(requestLogger(logger))
 
 	routes.Setup(router, &routes.Handler{
-		Webhook: webhookCtrl,
-		Message: messageCtrl,
-		Health:  healthCtrl,
+		Webhook:  webhookCtrl,
+		Message:  messageCtrl,
+		Customer: customerCtrl,
+		SSE:      sseCtrl,
+		Health:   healthCtrl,
 	}, logger)
 
 	ctx, cancel := context.WithCancel(context.Background())

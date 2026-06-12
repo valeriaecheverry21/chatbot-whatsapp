@@ -8,9 +8,11 @@ import (
 )
 
 type Handler struct {
-	Webhook *controllers.WebhookController
-	Message *controllers.MessageController
-	Health  *controllers.HealthController
+	Webhook  *controllers.WebhookController
+	Message  *controllers.MessageController
+	Customer *controllers.CustomerController
+	SSE      *controllers.SSEController
+	Health   *controllers.HealthController
 }
 
 func Setup(router *gin.Engine, h *Handler, log *zap.Logger) {
@@ -31,6 +33,8 @@ func Setup(router *gin.Engine, h *Handler, log *zap.Logger) {
 		api.POST("/messages/template", h.Message.SendTemplate)
 		api.POST("/messages/queue", h.Message.QueueMessage)
 		api.POST("/broadcast", h.Message.Broadcast)
+		api.GET("/customers", h.Customer.List)
+		api.GET("/webhooks/stream", h.SSE.Stream)
 	}
 
 	log.Info("routes configured",

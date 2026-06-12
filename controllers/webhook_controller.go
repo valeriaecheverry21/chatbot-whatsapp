@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -18,6 +19,7 @@ type WebhookController struct {
 	customerService *services.CustomerService
 	messageService  *services.MessageService
 	queueClient     *queue.Client
+	sseHub          *SSEHub
 	log             *zap.Logger
 }
 
@@ -27,6 +29,7 @@ func NewWebhookController(
 	customerService *services.CustomerService,
 	messageService *services.MessageService,
 	queueClient *queue.Client,
+	sseHub *SSEHub,
 	log *zap.Logger,
 ) *WebhookController {
 	return &WebhookController{
@@ -35,6 +38,7 @@ func NewWebhookController(
 		customerService: customerService,
 		messageService:  messageService,
 		queueClient:     queueClient,
+		sseHub:          sseHub,
 		log:             log,
 	}
 }
@@ -104,6 +108,10 @@ func (ctrl *WebhookController) HandleMessage(c *gin.Context) {
 		ctrl.log.Error("invalid webhook payload", zap.Error(err))
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload"})
 		return
+	}
+
+	if raw, err := json.Marshal(callback); err == nil && ctrl.sseHub != nil {
+		ctrl.sseHub.Broadcast(string(raw))
 	}
 
 	ctrl.log.Debug("webhook received",
