@@ -1,0 +1,26 @@
+# Binaries
+chatbot-whatsapp.exe
+chatbot-whatsapp
+*.exe
+*.test
+*.out
+
+# Environment
+.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Dependencies
+vendor/
+
+# Build
+/dist/
+/build/
